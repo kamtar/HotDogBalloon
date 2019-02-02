@@ -5,13 +5,13 @@
 
 void SystemClock_Config(void);
 
+MainApp mainApp;
+
 int main(void)
 {
 
   HAL_Init();
   SystemClock_Config();
-
-  MainApp mainApp;
 
   bool resInit = mainApp.Init();
   assert(resInit);
@@ -21,7 +21,6 @@ int main(void)
 	  mainApp.Task();
   }
 }
-
 
 void SystemClock_Config(void)
 {

@@ -7,8 +7,10 @@
 
 #ifndef INCLUDE_MAINAPP_HPP_
 #define INCLUDE_MAINAPP_HPP_
+
 #include <ITask.hpp>
 #include <stdint.h>
+#include <Semtech126xSpiDev.hpp>
 
 class MainApp : public ITask
 {
@@ -24,6 +26,9 @@ public:
 	virtual void Task() override;
 	virtual void ms_tick() override;
 	virtual void sec_tick() override;
+
+private:
+
 };
 
 

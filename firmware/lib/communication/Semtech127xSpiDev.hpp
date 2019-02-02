@@ -13,10 +13,10 @@
 #include <ISpi.hpp>
 #include <IOutputPin.hpp>
 
-class SemtechSpiDev : public ISpiRegDev
+class Semtech127xSpiDev : public ISpiRegDev
 {
 public:
-	SemtechSpiDev(ISpi& spi, IOutputPin& reset_pin, IOutputPin& di0_pin);
+	Semtech127xSpiDev(ISpi& spi, IOutputPin& reset_pin, IOutputPin& di0_pin);
 
 	//ISpiRegDev
 	virtual void Init() override;
@@ -25,8 +25,8 @@ public:
 	virtual uint8_t readReg8(uint8_t address) override;
 	//ISpiRegDev
 
-	SemtechSpiDev( const SemtechSpiDev& ) = delete; // non construction-copyable
-	SemtechSpiDev& operator=( const SemtechSpiDev& ) = delete; // non copyable
+	Semtech127xSpiDev( const Semtech127xSpiDev& ) = delete; // non construction-copyable
+	Semtech127xSpiDev& operator=( const Semtech127xSpiDev& ) = delete; // non copyable
 
 private:
 	ISpi &m_spi;

@@ -14,8 +14,8 @@
  {
  public:
 	virtual void Init()=0;
-	virtual void Write(DataRef data)=0;
-	virtual void Read(DataRef data_rq, DataRef data_out)=0;
+	virtual void Write(SimpleDataRef data)=0;
+	virtual void Read(SimpleDataRef data_rq, SimpleDataRef data_out)=0;
  };
 
 #endif /* LIB_COMMUNICATION_ISPI_HPP_ */
