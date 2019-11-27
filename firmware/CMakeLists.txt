@@ -1,0 +1,113 @@
+cmake_minimum_required(VERSION 3.13)
+project(firmware)
+
+SET(CMAKE_SYSTEM_NAME Generic)
+SET(CMAKE_SYSTEM_VERSION 1)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_COMPILER "C:/ARM Embedded GCC/8.2.1-1.2-20190119-1237/bin/arm-none-eabi-gcc.exe")
+set(CMAKE_CXX_COMPILER "C:/ARM Embedded GCC/8.2.1-1.2-20190119-1237/bin/arm-none-eabi-g++.exe")
+
+include_directories(Drivers/CMSIS)
+include_directories(Drivers/CMSIS/Device)
+include_directories(Drivers/CMSIS/Device/ST)
+include_directories(Drivers/CMSIS/Device/ST/STM32L0xx)
+include_directories(Drivers/CMSIS/Device/ST/STM32L0xx/Include)
+include_directories(Drivers/CMSIS/Include)
+include_directories(Drivers/STM32L0xx_HAL_Driver/Inc)
+include_directories(Drivers/STM32L0xx_HAL_Driver/Inc/Legacy)
+include_directories(Inc)
+include_directories(include)
+include_directories(lib/communication)
+include_directories(lib/network)
+include_directories(lib/system)
+include_directories(lib/Utils)
+
+add_executable(firmware
+        Drivers/CMSIS/Device/ST/STM32L0xx/Include/stm32l081xx.h
+        Drivers/CMSIS/Device/ST/STM32L0xx/Include/stm32l0xx.h
+        Drivers/CMSIS/Device/ST/STM32L0xx/Include/system_stm32l0xx.h
+        Drivers/CMSIS/Include/arm_common_tables.h
+        Drivers/CMSIS/Include/arm_const_structs.h
+        Drivers/CMSIS/Include/arm_math.h
+        Drivers/CMSIS/Include/cmsis_armcc.h
+        Drivers/CMSIS/Include/cmsis_armcc_V6.h
+        Drivers/CMSIS/Include/cmsis_gcc.h
+        Drivers/CMSIS/Include/core_cm0.h
+        Drivers/CMSIS/Include/core_cm0plus.h
+        Drivers/CMSIS/Include/core_cm3.h
+        Drivers/CMSIS/Include/core_cm4.h
+        Drivers/CMSIS/Include/core_cm7.h
+        Drivers/CMSIS/Include/core_cmFunc.h
+        Drivers/CMSIS/Include/core_cmInstr.h
+        Drivers/CMSIS/Include/core_cmSimd.h
+        Drivers/CMSIS/Include/core_sc000.h
+        Drivers/CMSIS/Include/core_sc300.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_cortex.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_cryp.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_cryp_ex.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_def.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_dma.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_flash.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_flash_ex.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_flash_ramfunc.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_gpio.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_gpio_ex.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_i2c.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_i2c_ex.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_pwr.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_pwr_ex.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_rcc.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_rcc_ex.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_spi.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_tim.h
+        Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_tim_ex.h
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_cortex.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_cryp.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_cryp_ex.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_dma.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash_ex.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash_ramfunc.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_gpio.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c_ex.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr_ex.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc_ex.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_spi.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim.c
+        Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.c
+        Inc/main.h
+        Inc/stm32l0xx_hal_conf.h
+        Inc/stm32l0xx_it.h
+        include/main.h
+        include/MainApp.hpp
+        include/stm32l0xx_hal_conf.h
+        include/stm32l0xx_it.h
+        lib/communication/Semtech126xSpiDev.cpp
+        lib/communication/Semtech126xSpiDev.hpp
+        lib/communication/Semtech127xSpiDev.cpp
+        lib/communication/Semtech127xSpiDev.hpp
+        lib/network/LoRaWANStack.cpp
+        lib/network/LoRaWANStack.hpp
+        lib/system/IInputPin.hpp
+        lib/system/IOutputPin.hpp
+        lib/system/ISpi.hpp
+        lib/system/ISpiRegDev.hpp
+        lib/Utils/DataRef.cpp
+        lib/Utils/DataRef.hpp
+        lib/Utils/ICryptoContext.hpp
+        lib/Utils/ITask.hpp
+        src/main.c
+        src/main.cpp
+        src/MainApp.cpp
+        src/stm32l0xx_hal_msp.c
+        src/stm32l0xx_it.c
+        src/system_stm32l0xx.c
+        src/tiny_printf.c
+        syscalls.c)

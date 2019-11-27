@@ -71,30 +71,30 @@
 	 m_dev.writeReg8(REG_PA_CONFIG, 0x70 | level);
 
 	 // PA BOOST
-	 if (level > 17)
+	 if (level >= 20)
 	 {
-		 if (level > 20)
-		 {
-			 level = 20;
-		 }
-
-		 // subtract 3 from level, so 18 - 20 maps to 15 - 17
-		 level -= 3;
-
-		 // High Power +20 dBm Operation (Semtech SX1276/77/78/79 5.4.3.)
 		 m_dev.writeReg8(REG_PA_DAC, 0x87);
 		 setOCP(140);
-	 } else {
+		 m_dev.writeReg8(REG_PA_CONFIG, PA_BOOST | (level - 2));
+	 } 
+	 else 
+	 {
 		 if (level < 2)
 		 {
-			 level = 2;
+			level = 2;
 		 }
+		 else if (level > 17) 
+		 {
+			level = 17;
+		 }
+
 		 //Default value PA_HF/LF or +17dBm
 		 m_dev.writeReg8(REG_PA_DAC, 0x84);
 		 setOCP(100);
+		 m_dev.writeReg8(REG_PA_CONFIG, PA_BOOST | (level - 2));
 	 }
 
-	 m_dev.writeReg8(REG_PA_CONFIG, PA_BOOST | (level - 2));
+	 
  }
 
 void Sx1276_Lora::setOCP(uint8_t mA)
