@@ -494,7 +494,7 @@
       (net 2 GND))
     (pad 1 smd rect (at -1.525 0 180) (size 1.95 2.5) (layers F.Cu F.Paste F.Mask)
       (net 7 +3V3))
-    (model Capacitors_Tantalum_SMD.3dshapes/CP_Tantalum_Case-T_EIA-3528-12.wrl
+    (model ${KISYS3DMOD}/Capacitors_Tantalum_SMD.3dshapes/TantalC_SizeB_EIA-3528_HandSoldering.wrl
       (at (xyz 0 0 0))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
@@ -605,7 +605,7 @@
       (net 7 +3V3))
     (pad 2 smd rect (at 1.525 0 180) (size 1.95 2.5) (layers F.Cu F.Paste F.Mask)
       (net 2 GND))
-    (model Capacitors_Tantalum_SMD.3dshapes/CP_Tantalum_Case-T_EIA-3528-12.wrl
+    (model ${KISYS3DMOD}/Capacitors_Tantalum_SMD.3dshapes/TantalC_SizeB_EIA-3528_HandSoldering.wrl
       (at (xyz 0 0 0))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
@@ -1015,10 +1015,10 @@
       (net 7 +3V3))
     (pad 1 smd rect (at -1.1 -0.95 90) (size 1.4 1) (layers F.Cu F.Paste F.Mask)
       (net 19 "Net-(Q1-Pad1)"))
-    (model ${KISYS3DMOD}/TO_SOT_Packages_SMD.3dshapes/SuperSOT-3.wrl
+    (model ${KISYS3DMOD}/TO_SOT_Packages_SMD.3dshapes/SOT-23.wrl
       (at (xyz 0 0 0))
       (scale (xyz 1 1 1))
-      (rotate (xyz 0 0 0))
+      (rotate (xyz 0 0 90))
     )
   )
 
@@ -2127,6 +2127,11 @@
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
     )
+    (model ${KISYS3DMOD}/Diodes_SMD.3dshapes/SOD-323.wrl
+      (at (xyz 0 0 0))
+      (scale (xyz 1 1 1))
+      (rotate (xyz 0 0 0))
+    )
   )
 
   (module Capacitors_SMD:C_0603 (layer F.Cu) (tedit 59958EE7) (tstamp 5DDDE24F)
@@ -2925,10 +2930,6 @@
   (segment (start 46.2915 63.7667) (end 47.132999 64.608199) (width 1) (layer B.Cu) (net 7))
   (segment (start 47.132999 64.608199) (end 47.132999 70.392597) (width 1) (layer B.Cu) (net 7))
   (segment (start 41.656 61.607) (end 41.656 60.313) (width 0.25) (layer F.Cu) (net 8))
-  (segment (start 64.24 39.89) (end 64.29 39.94) (width 1) (layer F.Cu) (net 72))
-  (segment (start 62.5 39.89) (end 64.29 39.94) (width 0.825021) (layer F.Cu) (net 72))
-  (segment (start 60.355 42.035) (end 62.5 39.89) (width 0.825021) (layer F.Cu) (net 72))
-  (segment (start 57.809 42.035) (end 60.355 42.035) (width 0.825021) (layer F.Cu) (net 72))
   (via (at 67.564 51.308) (size 0.6) (drill 0.3) (layers F.Cu B.Cu) (net 9))
   (segment (start 69.977 50.713) (end 68.159 50.713) (width 0.25) (layer F.Cu) (net 9))
   (segment (start 68.159 50.713) (end 67.564 51.308) (width 0.25) (layer F.Cu) (net 9))
@@ -3171,6 +3172,10 @@
   (segment (start 74.168 44.7295) (end 74.154 44.7155) (width 1) (layer B.Cu) (net 71))
   (segment (start 74.168 46.2495) (end 74.168 44.7295) (width 1) (layer B.Cu) (net 71))
   (segment (start 74.1807 44.84495) (end 74.1807 43.67905) (width 1) (layer B.Cu) (net 71))
+  (segment (start 64.24 39.89) (end 64.29 39.94) (width 1) (layer F.Cu) (net 72))
+  (segment (start 62.5 39.89) (end 64.29 39.94) (width 0.825021) (layer F.Cu) (net 72))
+  (segment (start 60.355 42.035) (end 62.5 39.89) (width 0.825021) (layer F.Cu) (net 72))
+  (segment (start 57.809 42.035) (end 60.355 42.035) (width 0.825021) (layer F.Cu) (net 72))
   (segment (start 64.29 38.8018) (end 64.262 38.7738) (width 0.25) (layer F.Cu) (net 72))
   (segment (start 64.29 39.94) (end 64.29 38.8018) (width 0.825021) (layer F.Cu) (net 72))
 
