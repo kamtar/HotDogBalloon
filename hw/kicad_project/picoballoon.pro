@@ -1,4 +1,4 @@
-update=02/12/2019 06:36:03
+update=04/12/2019 22:32:02
 version=1
 last_client=kicad
 [general]
@@ -240,7 +240,7 @@ dPairViaGap=0.25
 [schematic_editor]
 version=1
 PageLayoutDescrFile=
-PlotDirectoryName=C:/dev/picoballoon/hw/picoballoon/
+PlotDirectoryName=
 SubpartIdSeparator=0
 SubpartFirstId=65
 NetFmtName=Pcbnew
