@@ -15,7 +15,7 @@ public:
 	Temp_PCT2075(I_I2C& i2c);
 	bool Init();
 
-	float get_temp();
+	int get_temp();
 private:
 	I_I2C& m_i2c;
 	const uint8_t m_addr = 0x90;

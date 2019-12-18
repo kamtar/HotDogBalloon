@@ -32,7 +32,7 @@
 	m_dev.writeReg8(REG_FIFO_RX_BASE_ADDR, 0);
 
 	// set LNA boost
-	m_dev.writeReg8(REG_LNA,  m_dev.readReg8(REG_LNA) | 0x03);
+	//m_dev.writeReg8(REG_LNA,  m_dev.readReg8(REG_LNA) | 0x03);
 
 	// set auto AGC
 	m_dev.writeReg8(REG_MODEM_CONFIG_3, 0x04);
@@ -51,7 +51,7 @@
 	m_dev.writeReg8(REG_MODEM_CONFIG_2, (m_dev.readReg8(REG_MODEM_CONFIG_2) & 0x0f) | ((sf << 4) & 0xf0));
 
 	// set output power to 17 dBm
-	setTxPower(2);
+	setTxPower(14);
 	setLdoFlag();
 	// put in standby mode
 	idle();
@@ -72,6 +72,7 @@
  void Sx1276_Lora::setTxPower(int level)
  {
 
+	 // PA BOOST
 	 m_dev.writeReg8(REG_PA_CONFIG, 0x70 | level);
 
 	 // PA BOOST
@@ -95,7 +96,10 @@
 		 setOCP(100);
 	 }
 
-	 m_dev.writeReg8(REG_PA_CONFIG, PA_BOOST | (level - 2));
+	 if(level > 14)
+		 m_dev.writeReg8(REG_PA_CONFIG, PA_BOOST | 0x70 | (level - 2));
+
+
  }
 
 void Sx1276_Lora::setOCP(uint8_t mA)

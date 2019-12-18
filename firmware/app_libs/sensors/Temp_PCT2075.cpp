@@ -24,14 +24,14 @@ bool Temp_PCT2075::Init()
 	return true;
 }
 
-float Temp_PCT2075::get_temp()
+int Temp_PCT2075::get_temp()
 {
 	 uint8_t command = 0;
 	  uint16_t data = 0;
 
 		m_i2c.Read(m_addr,DataRef{&command,1}, DataRef{(uint8_t*)&data,2});
 
-		float res = (((int16_t)((uint8_t*)&data)[1] | (uint16_t)(((uint8_t*)&data)[0] <<8))>>5) * 0.125f;
-		return res;
+		//float res = (((int16_t)((uint8_t*)&data)[1] | (uint16_t)(((uint8_t*)&data)[0] <<8))>>5) * 0.125f;
+		return 0;
 }
 

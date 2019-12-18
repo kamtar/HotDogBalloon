@@ -1,46 +1,6 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
 
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc;
 
 CRC_HandleTypeDef hcrc;
@@ -53,11 +13,6 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
@@ -67,48 +22,58 @@ static void MX_RTC_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
-/* USER CODE BEGIN PFP */
 
-/* USER CODE END PFP */
 
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
 #include <STM32OutputPin.hpp>
 #include <STM32_I2C.hpp>
 #include <Bar_MS5637.hpp>
 #include <Temp_PCT2075.hpp>
+#include <STM32Spi.hpp>
+#include <SemtechSpiDev.hpp>
+#include <SX1276_LoRa.hpp>
+
+#include <LoRaWANPacketGen.hpp>
+
+const uint64_t devAddr = 0x2601163D;
+const uint8_t nwkSKey[16] = {0xBE,0xB8,0xC0,0x7F,0xA0,0x85,0xAA,0x6B,0x6D,0xD5,0xB1,0x46,0xC6,0xC5,0xC1,0x8D}; //"BEB8C07FA085AA6B6DD5B146C6C5C18D";
+const uint8_t appSKey[16] = {0x2C,0xF1,0xAE,0xA8,0x78,0xF9,0xCB,0x80,0x25,0xA4,0xF7,0x85,0x1A,0xA2,0x4A,0xFF};//"2CF1AEA878F9CB8025A4F7851AA24AFF";
+
+const uint8_t* test_packet = (uint8_t*)("Hello world");
+
+
+static constexpr uint64_t lora_frq = 868100000;
+
 STM32OutputPin led_gpio(GPIOA, GPIO_PIN_15);
 STM32_I2C i2c2(I2C2);
 Bar_MS5637 barometer(i2c2);
 Temp_PCT2075 temp_sensor(i2c2);
+
+STM32OutputPin lora_select(GPIOA, GPIO_PIN_4);
+STM32OutputPin lora_reset(GPIOA, GPIO_PIN_8);
+//STM32OutputPin lora_dio0(GPIOA, GPIO_PIN_11);
+
+STM32OutputPin* output_pins[] = {&lora_select, &lora_reset, &led_gpio};
+
+STM32Spi lora_spi(SPI1, lora_select);
+SemtechSpiDev semtech_dev(lora_spi, lora_reset, lora_reset);
+Sx1276_Lora lora_radio(semtech_dev);
+
+LoRaWANPacketGen lorawan_packet_gen(nwkSKey, appSKey, static_cast<uint32_t>(devAddr));
+
 /**
   * @brief  The application entry point.
   * @retval int
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
-  
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
+  volatile int temp = 0;
 
-  /* USER CODE END SysInit */
-  volatile float temp = 0;
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ADC_Init();
   MX_CRC_Init();
@@ -117,11 +82,18 @@ int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
-  /* USER CODE BEGIN 2 */
-  led_gpio.Init();
-  /* USER CODE END 2 */
+
+  for(uint8_t i=0; i<(sizeof(output_pins)/sizeof(output_pins[0])); i++)
+	  output_pins[i]->Init();
+
   barometer.Init();
   temp_sensor.Init();
+  lora_select.set();
+  lora_reset.set();
+
+  lora_spi.Init();
+  lora_radio.InitLoraRadio(868100000);
+
   led_gpio.set();
   HAL_Delay(250);
   led_gpio.clear();
@@ -129,16 +101,20 @@ int main(void)
   led_gpio.set();
   HAL_Delay(250);
   led_gpio.clear();
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+
+
+  DataRef pck = {(uint8_t*)test_packet, 11};
+  DataRef pck_raw = {nullptr, 0};
+
   while (1)
   {
-    /* USER CODE END WHILE */
+	  delay_ms(10000);
 	  temp = temp_sensor.get_temp();
-	  delay_ms(500);
-    /* USER CODE BEGIN 3 */
+	  lorawan_packet_gen.Gen_PacketDataUp(true, pck, pck_raw);
+	  lora_radio.sendPacket(pck_raw);
+	  while(lora_radio.txActive());
   }
-  /* USER CODE END 3 */
+
 }
 
 /**
