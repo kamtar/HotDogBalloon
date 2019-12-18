@@ -1,6 +1,6 @@
 
 #include "main.h"
-
+#include "string.h"
 ADC_HandleTypeDef hadc;
 
 CRC_HandleTypeDef hcrc;
@@ -44,6 +44,8 @@ const uint8_t* test_packet = (uint8_t*)("Hello world");
 static constexpr uint64_t lora_frq = 868100000;
 
 STM32OutputPin led_gpio(GPIOA, GPIO_PIN_15);
+STM32OutputPin gps_on(GPIOB, GPIO_PIN_0, GPIO_SPEED_FREQ_VERY_HIGH);
+STM32OutputPin gps_rst(GPIOA, GPIO_PIN_1);
 STM32_I2C i2c2(I2C2);
 Bar_MS5637 barometer(i2c2);
 Temp_PCT2075 temp_sensor(i2c2);
@@ -52,7 +54,7 @@ STM32OutputPin lora_select(GPIOA, GPIO_PIN_4);
 STM32OutputPin lora_reset(GPIOA, GPIO_PIN_8);
 //STM32OutputPin lora_dio0(GPIOA, GPIO_PIN_11);
 
-STM32OutputPin* output_pins[] = {&lora_select, &lora_reset, &led_gpio};
+STM32OutputPin* output_pins[] = {&lora_select, &lora_reset, &led_gpio, &gps_on};
 
 STM32Spi lora_spi(SPI1, lora_select);
 SemtechSpiDev semtech_dev(lora_spi, lora_reset, lora_reset);
@@ -86,6 +88,14 @@ int main(void)
   for(uint8_t i=0; i<(sizeof(output_pins)/sizeof(output_pins[0])); i++)
 	  output_pins[i]->Init();
 
+  gps_on.set();
+  delay_ms(50);
+  gps_on.clear();
+  delay_ms(50);
+   RTC_TimeTypeDef sTime;
+   RTC_TimeTypeDef nTime;
+  HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+
   barometer.Init();
   temp_sensor.Init();
   lora_select.set();
@@ -95,24 +105,68 @@ int main(void)
   lora_radio.InitLoraRadio(868100000);
 
   led_gpio.set();
-  HAL_Delay(250);
+  HAL_Delay(100);
   led_gpio.clear();
-  HAL_Delay(500);
+  HAL_Delay(100);
   led_gpio.set();
-  HAL_Delay(250);
+  HAL_Delay(100);
   led_gpio.clear();
 
 
   DataRef pck = {(uint8_t*)test_packet, 11};
   DataRef pck_raw = {nullptr, 0};
+  char buff[1024];
+  HAL_UART_Receive(&huart2, (uint8_t*)buff, 1024, 50);
+  HAL_UART_Abort(&huart2);
+  HAL_UART_Transmit(&huart2, (uint8_t*)"$PMTK300,1000,0,0,0,0*1C\r\n", 26, 1000);
+  HAL_UART_Transmit(&huart2, (uint8_t*)"$PMTK314,1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,1,0*2D\r\n", 51, 1000);
+  uint8_t* t =(uint8_t*)"$PMTK000*32\r\n";
+
 
   while (1)
   {
-	  delay_ms(10000);
-	  temp = temp_sensor.get_temp();
-	  lorawan_packet_gen.Gen_PacketDataUp(true, pck, pck_raw);
-	  lora_radio.sendPacket(pck_raw);
-	  while(lora_radio.txActive());
+	  memset(buff,0,256);
+	  //HAL_UART_Transmit(&huart2, t, 13, 1000);
+	  HAL_UART_Abort(&huart2);
+	HAL_UART_Receive(&huart2, (uint8_t*)buff, 255, 500);
+	  for(int i=0;i<256;i++)
+	  {
+		  if (strncmp(&buff[i],"$GPGSV,",7)==0)
+		  {
+				  if(buff[i+12] != 0x30 && buff[i+12] != 0)
+				  	  {
+					  	  /*led_gpio.set();
+					  	  HAL_Delay(10);
+					  	  led_gpio.clear();
+					  	  HAL_Delay(10);*/
+				  	  }
+
+				  break;
+
+		  }
+
+		  if (strncmp(&buff[i],"$GPGGA,",7)==0)
+				  {
+						  if(buff[i+18] != 0x2c && buff[i+18] != 0)
+						  	  {
+							  //HAL_RTC_GetTime(&hrtc, &nTime, RTC_FORMAT_BIN);
+							  	  	  	  	  	  led_gpio.set();
+												  	  HAL_Delay(10);
+												  	  led_gpio.clear();
+												  	  HAL_Delay(10);
+						  	  }
+
+						  break;
+
+				  }
+
+	  }
+
+	//  temp = temp_sensor.get_temp();
+	 // lorawan_packet_gen.Gen_PacketDataUp(true, pck, pck_raw);
+	//  lora_radio.sendPacket(pck_raw);
+	 // while(lora_radio.txActive());
+
   }
 
 }
