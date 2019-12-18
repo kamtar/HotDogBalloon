@@ -44,7 +44,7 @@ const uint8_t* test_packet = (uint8_t*)("Hello world");
 static constexpr uint64_t lora_frq = 868100000;
 
 STM32OutputPin led_gpio(GPIOA, GPIO_PIN_15);
-STM32OutputPin gps_on(GPIOB, GPIO_PIN_0, GPIO_SPEED_FREQ_VERY_HIGH);
+STM32OutputPin gps_on(GPIOB, GPIO_PIN_0);
 STM32OutputPin gps_rst(GPIOA, GPIO_PIN_1);
 STM32_I2C i2c2(I2C2);
 Bar_MS5637 barometer(i2c2);
@@ -94,15 +94,16 @@ int main(void)
   delay_ms(50);
    RTC_TimeTypeDef sTime;
    RTC_TimeTypeDef nTime;
+   RTC_DateTypeDef yy;
   HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-
+  HAL_RTC_GetDate(&hrtc, &yy, RTC_FORMAT_BIN);
   barometer.Init();
   temp_sensor.Init();
   lora_select.set();
   lora_reset.set();
 
-  lora_spi.Init();
-  lora_radio.InitLoraRadio(868100000);
+  //lora_spi.Init();
+  //lora_radio.InitLoraRadio(868100000);
 
   led_gpio.set();
   HAL_Delay(100);
@@ -115,13 +116,15 @@ int main(void)
 
   DataRef pck = {(uint8_t*)test_packet, 11};
   DataRef pck_raw = {nullptr, 0};
-  char buff[1024];
+  char buff[256];
+
+  HAL_UART_Transmit(&huart2, (uint8_t*)"$PMTK104*37\r\n", 13, 1000);
   HAL_UART_Receive(&huart2, (uint8_t*)buff, 1024, 50);
   HAL_UART_Abort(&huart2);
   HAL_UART_Transmit(&huart2, (uint8_t*)"$PMTK300,1000,0,0,0,0*1C\r\n", 26, 1000);
   HAL_UART_Transmit(&huart2, (uint8_t*)"$PMTK314,1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,1,0*2D\r\n", 51, 1000);
   uint8_t* t =(uint8_t*)"$PMTK000*32\r\n";
-
+  volatile uint32_t time_to_fix_sec;
 
   while (1)
   {
@@ -131,34 +134,40 @@ int main(void)
 	HAL_UART_Receive(&huart2, (uint8_t*)buff, 255, 500);
 	  for(int i=0;i<256;i++)
 	  {
+
+		  if (strncmp(&buff[i],"$GPGGA,",7)==0)
+		  {
+				if(buff[i+18] != 0x2c && buff[i+18] != 0)
+				{
+						HAL_RTC_GetTime(&hrtc, &nTime, RTC_FORMAT_BIN);
+						HAL_RTC_GetDate(&hrtc, &yy, RTC_FORMAT_BIN);
+						if(nTime.Minutes != sTime.Minutes)
+							time_to_fix_sec = (((nTime.Minutes - sTime.Minutes)*60) - sTime.Seconds) + nTime.Seconds;
+						else
+							time_to_fix_sec = nTime.Seconds -  sTime.Seconds;
+						led_gpio.set();
+						HAL_Delay(10);
+						led_gpio.clear();
+						HAL_Delay(10);
+					}
+
+				  }
+
 		  if (strncmp(&buff[i],"$GPGSV,",7)==0)
 		  {
 				  if(buff[i+12] != 0x30 && buff[i+12] != 0)
 				  	  {
-					  	  /*led_gpio.set();
+					  	/*  led_gpio.set();
 					  	  HAL_Delay(10);
 					  	  led_gpio.clear();
 					  	  HAL_Delay(10);*/
 				  	  }
 
-				  break;
+
 
 		  }
 
-		  if (strncmp(&buff[i],"$GPGGA,",7)==0)
-				  {
-						  if(buff[i+18] != 0x2c && buff[i+18] != 0)
-						  	  {
-							  //HAL_RTC_GetTime(&hrtc, &nTime, RTC_FORMAT_BIN);
-							  	  	  	  	  	  led_gpio.set();
-												  	  HAL_Delay(10);
-												  	  led_gpio.clear();
-												  	  HAL_Delay(10);
-						  	  }
 
-						  break;
-
-				  }
 
 	  }
 
