@@ -128,8 +128,19 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
+  systick_handler();
   /* USER CODE END SysTick_IRQn 1 */
+}
+
+void RTC_IRQHandler(void)
+{
+	HAL_RTC_AlarmIRQHandler(&hrtc);
+	HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
+}
+
+void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
+{
+	flags.sec = true;
 }
 
 /******************************************************************************/

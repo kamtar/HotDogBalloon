@@ -55,6 +55,7 @@
 	setLdoFlag();
 	// put in standby mode
 	idle();
+	sleep();
 
 	return true;
  }

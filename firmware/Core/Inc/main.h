@@ -1,66 +1,61 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __MAIN_H
 #define __MAIN_H
+
+#include "stm32l0xx_hal.h"
+#include <stdbool.h>
+
+#define delay_ms HAL_Delay
+
+// ----------------------------------------------------------------------------
+typedef struct
+{
+	volatile uint32_t red;
+
+}Led_struct;
+
+// ----------------------------------------------------------------------------
+typedef struct
+{
+	volatile uint32_t ms;
+
+}Ms_tmr_struct;
+
+// ----------------------------------------------------------------------------
+typedef struct
+{
+	volatile uint32_t sec;
+	volatile uint32_t measurement;
+
+}Sec_tmr_struct;
+
+// ----------------------------------------------------------------------------
+typedef struct
+{
+	volatile bool sec;
+	volatile bool measurement;
+
+}Flag_struct;
+
+extern ADC_HandleTypeDef hadc;
+extern CRC_HandleTypeDef hcrc;
+extern RTC_HandleTypeDef hrtc;
+extern SPI_HandleTypeDef hspi1;
+extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
+
+extern Ms_tmr_struct 	ms_tmr;
+extern Sec_tmr_struct 	sec_tmr;
+extern Led_struct 		led;
+extern Flag_struct		flags;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Includes ------------------------------------------------------------------*/
-#include "stm32l0xx_hal.h"
-
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-/* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
-
-/* USER CODE END ET */
-
-/* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
-
-/* USER CODE END EC */
-
-/* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
-
-/* USER CODE END EM */
-#define delay_ms HAL_Delay
-/* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
-/* USER CODE BEGIN EFP */
-
-/* USER CODE END EFP */
-
-/* Private defines -----------------------------------------------------------*/
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
+void systick_handler();
 
 #ifdef __cplusplus
 }
