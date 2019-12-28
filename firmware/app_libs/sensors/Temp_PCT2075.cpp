@@ -16,10 +16,10 @@ Temp_PCT2075::Temp_PCT2075(I_I2C& i2c) : m_i2c(i2c)
 bool Temp_PCT2075::Init()
 {
 	  uint16_t adc = 0;
-	 uint8_t command = 0x1E;
-
+	 uint8_t command[2] = {1, 1};
 
 	 m_i2c.Init();
+	 m_i2c.Write(m_addr, DataRef{command,2});
 
 	return true;
 }

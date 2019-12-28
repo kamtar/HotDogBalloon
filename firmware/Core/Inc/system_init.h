@@ -23,6 +23,11 @@ void MX_SPI1_Init(void);
 void MX_USART1_UART_Init(void);
 void MX_USART2_UART_Init(void);
 
+void I2C_MUX(bool en);
+void SPI_MUX(bool en);
+void USART1_MUX(bool en);
+void USART2_MUX(bool en);
+
 #ifdef __cplusplus
 }
 #endif

@@ -6,6 +6,7 @@
  */
 
 #include "system_init.h"
+#include <string.h>
 
 
 /**
@@ -20,7 +21,7 @@ void SystemClock_Config(void)
 
   /** Configure the main internal regulator output voltage
   */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
 
   /** Initializes the CPU, AHB and APB busses clocks
   */
@@ -58,6 +59,93 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+void I2C_MUX(bool en)
+{
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    GPIO_InitStruct.Pin 		= GPIO_PIN_13|GPIO_PIN_14;
+    GPIO_InitStruct.Pull 		= GPIO_PULLUP;
+    GPIO_InitStruct.Speed 		= GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate 	= GPIO_AF5_I2C2;
+
+    if(en)
+    {
+    	GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+    }
+    else
+    {
+    	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    }
+
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+}
+
+void SPI_MUX(bool en)
+{
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    GPIO_InitStruct.Pin 		= GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+
+    GPIO_InitStruct.Pull 		= GPIO_NOPULL;
+    GPIO_InitStruct.Speed 		= GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate 	= GPIO_AF0_SPI1;
+
+    if(en)
+    {
+    	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    }
+    else
+    {
+    	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    }
+
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+
+void USART1_MUX(bool en)
+{
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    GPIO_InitStruct.Pin 		= GPIO_PIN_9|GPIO_PIN_10;
+    GPIO_InitStruct.Mode 		= GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull 		= GPIO_NOPULL;
+    GPIO_InitStruct.Speed 		= GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate 	= GPIO_AF4_USART1;
+
+    if(en)
+    {
+    	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    }
+    else
+    {
+    	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    }
+
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+
+void USART2_MUX(bool en)
+{
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    GPIO_InitStruct.Pin 		= GPIO_PIN_2|GPIO_PIN_3;
+    GPIO_InitStruct.Mode 		= GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull 		= GPIO_NOPULL;
+    GPIO_InitStruct.Speed 		= GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate 	= GPIO_AF4_USART2;
+
+    if(en)
+    {
+    	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    }
+    else
+    {
+    	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    }
+
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 /**

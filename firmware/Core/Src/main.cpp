@@ -153,6 +153,11 @@ int main(void)
 
   led.red = 1000;
 
+  I2C_MUX(false);
+  SPI_MUX(false);
+  USART1_MUX(false);
+  USART2_MUX(false);
+
   while (1)
   {
 	  if(flags.sec)
@@ -161,13 +166,13 @@ int main(void)
 
 		  sec_handler();
 
-		  led.red = 2;
+		  //led.red = 2;
 	  }
 
 	  if(can_stop())
 	  {// Je mozne prejit do stopu a probudit se az na RTC
 
-		  HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI);
+		  HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
 	  }
 	  else
 	  {// zbyva dokoncit tasky
