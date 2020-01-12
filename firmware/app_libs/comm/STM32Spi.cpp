@@ -62,3 +62,42 @@ void STM32Spi::Read(DataRef data_rq, DataRef data_out)
 	HAL_SPI_Receive(&m_spi, data_out.data, data_out.size, 100);
 	m_select_pin.set();
 }
+
+void STM32Spi::WriteByte(uint8_t byte)
+{
+	if(!m_is_ready)
+		return;
+
+	HAL_SPI_Transmit(&m_spi, &byte, 1, 100);
+}
+
+uint8_t STM32Spi::ReadByte()
+{
+	if(!m_is_ready)
+		return 0;
+
+	uint8_t data = 0;
+
+	HAL_SPI_Receive(&m_spi, &data, 1, 100);
+
+	return data;
+}
+
+void STM32Spi::select()
+{
+	m_select_pin.clear();
+}
+
+void STM32Spi::unselect()
+{
+	m_select_pin.set();
+}
+
+
+
+
+
+
+
+
+

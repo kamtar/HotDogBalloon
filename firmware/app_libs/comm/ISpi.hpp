@@ -14,6 +14,10 @@
 	virtual void Init()=0;
 	virtual void Write(DataRef data)=0;
 	virtual void Read(DataRef data_rq, DataRef data_out)=0;
+	virtual void WriteByte(uint8_t byte)=0;
+	virtual uint8_t ReadByte()=0;
+	virtual void select()=0;
+	virtual void unselect()=0;
 
 	ISpi() {};
 	ISpi( const ISpi& ) = delete; // non construction-copyable

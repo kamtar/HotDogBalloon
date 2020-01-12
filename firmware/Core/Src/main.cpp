@@ -10,6 +10,7 @@
 #include <STM32Spi.hpp>
 #include <SemtechSpiDev.hpp>
 #include <SX1276_LoRa.hpp>
+#include <AT25SF041.h>
 
 #include <LoRaWANPacketGen.hpp>
 
@@ -38,12 +39,17 @@ Temp_PCT2075 temp_sensor(i2c2);
 STM32OutputPin lora_select(GPIOA, GPIO_PIN_4);
 STM32OutputPin lora_reset(GPIOA, GPIO_PIN_8);
 //STM32OutputPin lora_dio0(GPIOA, GPIO_PIN_11);
+STM32OutputPin extflash_select(GPIOB, GPIO_PIN_10);
 
-STM32OutputPin* output_pins[] = {&lora_select, &lora_reset, &led_gpio, &gps_on};
+STM32OutputPin* output_pins[] = {&lora_select, &lora_reset, &led_gpio, &gps_on, &extflash_select};
 
 STM32Spi lora_spi(SPI1, lora_select);
 SemtechSpiDev semtech_dev(lora_spi, lora_reset, lora_reset);
 Sx1276_Lora lora_radio(semtech_dev);
+
+STM32Spi extflash_spi(SPI1, extflash_select);
+
+AT25SF041 extflash(extflash_spi);
 
 LoRaWANPacketGen lorawan_packet_gen(nwkSKey, appSKey, static_cast<uint32_t>(devAddr));
 
@@ -51,6 +57,7 @@ Ms_tmr_struct 	ms_tmr;
 Sec_tmr_struct 	sec_tmr;
 Led_struct 		led;
 Flag_struct		flags;
+
 
 // ----------------------------------------------------------------------------
 static void handle_led(volatile uint32_t & tmr, STM32OutputPin & pin)
@@ -108,6 +115,8 @@ int main(void)
 {
   HAL_Init();
 
+  delay_ms(50); // stabilizace napeti pro flashku
+
   SystemClock_Config();
 
   volatile int temp = 0;
@@ -132,9 +141,14 @@ int main(void)
   temp_sensor.Init();
   lora_select.set();
   lora_reset.set();
+  extflash_select.set();
 
   lora_spi.Init();
+  extflash_spi.Init();
+
   lora_radio.InitLoraRadio(868100000);
+
+  bool flash_init = extflash.init();
 
   DataRef pck = {(uint8_t*)test_packet, 11};
   DataRef pck_raw = {nullptr, 0};
@@ -151,7 +165,10 @@ int main(void)
   uint8_t* t =(uint8_t*)"$PMTK000*32\r\n";
   volatile uint32_t time_to_fix_sec;
 
-  led.red = 1000;
+  if(flash_init)
+	  led.red = 1000;
+  else
+	  led.red = 10;
 
   I2C_MUX(false);
   SPI_MUX(false);

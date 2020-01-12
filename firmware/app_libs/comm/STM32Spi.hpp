@@ -20,6 +20,10 @@ public:
 	virtual void Init() override;
 	virtual void Write(DataRef data) override;
 	virtual void Read(DataRef data_rq, DataRef data_out) override;
+	virtual void WriteByte(uint8_t byte) override;
+	virtual uint8_t ReadByte() override;
+	virtual void select() override;
+	virtual void unselect() override;
 
 private:
 	SPI_TypeDef* m_spi_pointer;
