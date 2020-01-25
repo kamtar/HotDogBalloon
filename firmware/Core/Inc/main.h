@@ -10,6 +10,13 @@
 // ----------------------------------------------------------------------------
 typedef struct
 {
+	uint32_t uptime;
+
+}State_struct;
+
+// ----------------------------------------------------------------------------
+typedef struct
+{
 	volatile uint32_t red;
 
 }Led_struct;
@@ -44,6 +51,7 @@ extern SPI_HandleTypeDef hspi1;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
+extern State_struct		st;
 extern Ms_tmr_struct 	ms_tmr;
 extern Sec_tmr_struct 	sec_tmr;
 extern Led_struct 		led;

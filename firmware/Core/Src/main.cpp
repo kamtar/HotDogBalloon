@@ -1,18 +1,10 @@
 
-#include "main.h"
+#include <cstdio>
+
+#include "main.hpp"
 #include "string.h"
 #include "system_init.h"
-
-#include <STM32OutputPin.hpp>
-#include <STM32_I2C.hpp>
-#include <Bar_MS5637.hpp>
-#include <Temp_PCT2075.hpp>
-#include <STM32Spi.hpp>
-#include <SemtechSpiDev.hpp>
-#include <SX1276_LoRa.hpp>
-#include <AT25SF041.h>
-
-#include <LoRaWANPacketGen.hpp>
+#include "debug.h"
 
 const uint64_t devAddr = 0x2601163D;
 const uint8_t nwkSKey[16] = {0xBE,0xB8,0xC0,0x7F,0xA0,0x85,0xAA,0x6B,0x6D,0xD5,0xB1,0x46,0xC6,0xC5,0xC1,0x8D}; //"BEB8C07FA085AA6B6DD5B146C6C5C18D";
@@ -22,6 +14,12 @@ const uint8_t* test_packet = (uint8_t*)("Hello world");
 
 static constexpr uint64_t lora_frq = 868100000;
 
+// Buffers
+uint8_t sys_uart_rx_buffer[255];
+uint8_t sys_uart_tx_buffer[255];
+uint8_t cmd_buffer[255];
+
+// STM HAL instances
 ADC_HandleTypeDef hadc;
 CRC_HandleTypeDef hcrc;
 RTC_HandleTypeDef hrtc;
@@ -29,13 +27,10 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
+// Pins
 STM32OutputPin led_gpio(GPIOA, GPIO_PIN_15);
 STM32OutputPin gps_on(GPIOB, GPIO_PIN_0);
 STM32OutputPin gps_rst(GPIOA, GPIO_PIN_1);
-STM32_I2C i2c2(I2C2);
-Bar_MS5637 barometer(i2c2);
-Temp_PCT2075 temp_sensor(i2c2);
-
 STM32OutputPin lora_select(GPIOA, GPIO_PIN_4);
 STM32OutputPin lora_reset(GPIOA, GPIO_PIN_8);
 //STM32OutputPin lora_dio0(GPIOA, GPIO_PIN_11);
@@ -43,16 +38,30 @@ STM32OutputPin extflash_select(GPIOB, GPIO_PIN_10);
 
 STM32OutputPin* output_pins[] = {&lora_select, &lora_reset, &led_gpio, &gps_on, &extflash_select};
 
+// Peripherals
+STM32_I2C i2c2(I2C2);
 STM32Spi lora_spi(SPI1, lora_select);
+STM32Spi extflash_spi(SPI1, extflash_select);
+STM32_FIFO_UART sys_uart(&huart1, { sys_uart_rx_buffer, sizeof(sys_uart_rx_buffer) }, { sys_uart_tx_buffer, sizeof(sys_uart_tx_buffer) });
+
+// Devices
+Bar_MS5637 barometer(i2c2);
+Temp_PCT2075 temp_sensor(i2c2);
+AT25SF041 extflash(extflash_spi);
 SemtechSpiDev semtech_dev(lora_spi, lora_reset, lora_reset);
 Sx1276_Lora lora_radio(semtech_dev);
 
-STM32Spi extflash_spi(SPI1, extflash_select);
-
-AT25SF041 extflash(extflash_spi);
-
+// Others
 LoRaWANPacketGen lorawan_packet_gen(nwkSKey, appSKey, static_cast<uint32_t>(devAddr));
+Commands cmd({ cmd_buffer, sizeof(cmd_buffer) });
 
+
+extern "C" void USART1_IRQHandler()
+{
+	sys_uart.irq();
+}
+
+State_struct	st;
 Ms_tmr_struct 	ms_tmr;
 Sec_tmr_struct 	sec_tmr;
 Led_struct 		led;
@@ -93,6 +102,10 @@ void systick_handler()
 // ----------------------------------------------------------------------------
 void sec_handler()
 {
+	st.uptime++;
+
+	led.red = 2;
+
 	handle_tmr_flags(sec_tmr.measurement, flags.measurement);
 }
 
@@ -105,6 +118,8 @@ bool can_stop()
 
 	return !led_active;
 }
+
+
 
 
 /**
@@ -171,9 +186,13 @@ int main(void)
 	  led.red = 10;
 
   I2C_MUX(false);
-  SPI_MUX(false);
-  USART1_MUX(false);
+  //SPI_MUX(false);
+  //USART1_MUX(false);
   USART2_MUX(false);
+
+  sys_uart.rx_start();
+
+  cmd.implicit_lf(true);
 
   while (1)
   {
@@ -182,14 +201,14 @@ int main(void)
 		  flags.sec = false;
 
 		  sec_handler();
-
-		  //led.red = 2;
 	  }
+
+	  cmd.task();
 
 	  if(can_stop())
 	  {// Je mozne prejit do stopu a probudit se az na RTC
 
-		  HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+		  //HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
 	  }
 	  else
 	  {// zbyva dokoncit tasky
