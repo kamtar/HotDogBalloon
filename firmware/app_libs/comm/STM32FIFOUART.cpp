@@ -150,7 +150,17 @@ uint8_t STM32_FIFO_UART::read()
 	return byte;
 }
 
+// ----------------------------------------------------------------------------
+void STM32_FIFO_UART::enable()
+{
+	__HAL_UART_ENABLE(m_huart);
+}
 
+// ----------------------------------------------------------------------------
+void STM32_FIFO_UART::disable()
+{
+	__HAL_UART_DISABLE(m_huart);
+}
 
 
 

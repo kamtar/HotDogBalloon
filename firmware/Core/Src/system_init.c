@@ -38,7 +38,7 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB busses clocks
   */
-  RCC_ClkInitStruct.ClockType 		= RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType 		= RCC_CLOCKTYPE_SYSCLK;
   RCC_ClkInitStruct.SYSCLKSource 	= RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider 	= RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider 	= RCC_HCLK_DIV1;
@@ -59,6 +59,8 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
+  __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_HSI);
 }
 
 void I2C_MUX(bool en)

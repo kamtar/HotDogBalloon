@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include "debug.h"
+#include "uart.h"
+#include "spi.h"
 
 // ----------------------------------------------------------------------------
 void Commands::implicit_lf(bool en)
@@ -17,6 +19,8 @@ void Commands::task()
 {
 	while(sys_uart.rx_fifo_size())
 	{
+		enable_sys_uart(SYS_UART_CMD_TIMEOUT);
+
 		uint8_t byte = sys_uart.read();
 
 		if(byte == '\r')
@@ -233,6 +237,8 @@ void Commands::send_error()
 // ----------------------------------------------------------------------------
 void Commands::read_extflash(uint32_t addr, size_t size)
 {
+	bool was_disabled = enable_spi();
+
 	extflash.seq_read_start(addr);
 
 	for(size_t i=0; i<size; i++)
@@ -242,15 +248,21 @@ void Commands::read_extflash(uint32_t addr, size_t size)
 
 	extflash.seq_read_stop();
 
+	disable_spi(was_disabled);
+
 	printf("\r\n");
 }
 
 // ----------------------------------------------------------------------------
 void Commands::erase_extflash_all()
 {
+	bool was_disabled = enable_spi();
+
 	extflash.erase_all();
 
 	while(extflash.is_busy()) {}
+
+	disable_spi(was_disabled);
 
 	send_ok();
 }
@@ -258,13 +270,19 @@ void Commands::erase_extflash_all()
 // ----------------------------------------------------------------------------
 void Commands::erase_extflash_page(uint32_t addr)
 {
+	bool was_disabled = enable_spi();
+
 	if(!extflash.erase_page(addr))
 	{
+		disable_spi(was_disabled);
+
 		send_error();
 		return;
 	}
 
 	while(extflash.is_busy()) {}
+
+	disable_spi(was_disabled);
 
 	send_ok();
 }
@@ -280,6 +298,8 @@ void Commands::write_extflash(uint32_t addr, uint8_t * data)
 		return;
 	}
 
+	bool was_disabled = enable_spi();
+
 	extflash.seq_write_start(addr);
 
 	for(size_t i=0; i<size; i++)
@@ -288,6 +308,8 @@ void Commands::write_extflash(uint32_t addr, uint8_t * data)
 	}
 
 	extflash.seq_write_stop();
+
+	disable_spi(was_disabled);
 
 	send_ok();
 }

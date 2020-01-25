@@ -24,6 +24,9 @@ public:
 	void write(DataRef data);
 	uint8_t read();
 
+	void enable();
+	void disable();
+
 private:
 	UART_HandleTypeDef * m_huart;
 

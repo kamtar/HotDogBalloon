@@ -25,6 +25,7 @@ typedef struct
 typedef struct
 {
 	volatile uint32_t ms;
+	volatile uint32_t sys_uart_tmr;
 
 }Ms_tmr_struct;
 
@@ -41,6 +42,7 @@ typedef struct
 {
 	volatile bool sec;
 	volatile bool measurement;
+	volatile bool sys_uart_timeout;
 
 }Flag_struct;
 

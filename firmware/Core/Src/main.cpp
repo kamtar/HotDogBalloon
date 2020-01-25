@@ -5,6 +5,8 @@
 #include "string.h"
 #include "system_init.h"
 #include "debug.h"
+#include "uart.h"
+#include "spi.h"
 
 const uint64_t devAddr = 0x2601163D;
 const uint8_t nwkSKey[16] = {0xBE,0xB8,0xC0,0x7F,0xA0,0x85,0xAA,0x6B,0x6D,0xD5,0xB1,0x46,0xC6,0xC5,0xC1,0x8D}; //"BEB8C07FA085AA6B6DD5B146C6C5C18D";
@@ -97,6 +99,8 @@ static void handle_tmr_flags(volatile uint32_t & tmr, volatile bool & flag)
 void systick_handler()
 {
 	handle_led(led.red, led_gpio);
+
+	handle_tmr_flags(ms_tmr.sys_uart_tmr, flags.sys_uart_timeout);
 }
 
 // ----------------------------------------------------------------------------
@@ -104,19 +108,21 @@ void sec_handler()
 {
 	st.uptime++;
 
-	led.red = 2;
-
 	handle_tmr_flags(sec_tmr.measurement, flags.measurement);
+
+	led.red = 2;
 }
 
 // ----------------------------------------------------------------------------
 bool can_stop()
 {
 	bool led_active = led.red;
+	bool tmr_active = ms_tmr.sys_uart_tmr || ms_tmr.ms;
+	bool flags_active = flags.measurement || flags.sec || flags.sys_uart_timeout;
 
 	// TODO dalsi podminky pro povoleni usnuti
 
-	return !led_active;
+	return !(led_active || tmr_active || flags_active);
 }
 
 
@@ -161,9 +167,18 @@ int main(void)
   lora_spi.Init();
   extflash_spi.Init();
 
+  enable_spi();
+
   lora_radio.InitLoraRadio(868100000);
 
   bool flash_init = extflash.init();
+
+  disable_spi(true);
+
+  if(flash_init)
+	  led.red = 1000;
+  else
+	  led.red = 10;
 
   DataRef pck = {(uint8_t*)test_packet, 11};
   DataRef pck_raw = {nullptr, 0};
@@ -180,16 +195,10 @@ int main(void)
   uint8_t* t =(uint8_t*)"$PMTK000*32\r\n";
   volatile uint32_t time_to_fix_sec;
 
-  if(flash_init)
-	  led.red = 1000;
-  else
-	  led.red = 10;
-
   I2C_MUX(false);
-  //SPI_MUX(false);
-  //USART1_MUX(false);
   USART2_MUX(false);
 
+  enable_sys_uart(SYS_UART_START_TIMEOUT);
   sys_uart.rx_start();
 
   cmd.implicit_lf(true);
@@ -203,12 +212,19 @@ int main(void)
 		  sec_handler();
 	  }
 
+	  if(flags.sys_uart_timeout)
+	  {
+		  flags.sys_uart_timeout = false;
+
+		  disable_sys_uart(true);
+	  }
+
 	  cmd.task();
 
 	  if(can_stop())
 	  {// Je mozne prejit do stopu a probudit se az na RTC
 
-		  //HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+		  HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
 	  }
 	  else
 	  {// zbyva dokoncit tasky
