@@ -13,6 +13,7 @@
 // CMD
 const uint8_t PMTK_TEST[] 					= "$PMTK000*32\r\n";
 const uint8_t PMTK_CMD_FULL_COLD_START[] 	= "$PMTK104*37\r\n";
+const uint8_t PMTK_CMD_WARM_START[]			= "$PMTK102*31\r\n";
 const uint8_t PMTK_CMD_HOT_START[]			= "$PMTK101*32\r\n";
 const uint8_t PMTK_API_SET_FIX_CTL[] 		= "$PMTK300,1000,0,0,0,0*1C\r\n";
 const uint8_t PMTK_API_SET_NMEA_OUTPUT[] 	= "$PMTK314,1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,1,0*2D\r\n";
@@ -32,9 +33,15 @@ void Gps::pmtk_test()
 }
 
 // ----------------------------------------------------------------------------
-void Gps::cold_start()
+void Gps::full_cold_start()
 {
 	send_cmd((uint8_t *)PMTK_CMD_FULL_COLD_START, (size_t)sizeof(PMTK_CMD_FULL_COLD_START));
+}
+
+// ----------------------------------------------------------------------------
+void Gps::warm_start()
+{
+	send_cmd((uint8_t *)PMTK_CMD_WARM_START, (size_t)sizeof(PMTK_CMD_WARM_START));
 }
 
 // ----------------------------------------------------------------------------

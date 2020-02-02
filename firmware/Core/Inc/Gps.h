@@ -16,7 +16,8 @@ public:
 
 	void pmtk_test();
 
-	void cold_start();
+	void full_cold_start();
+	void warm_start();
 	void hot_start();
 	void set_fix();
 	void set_nmea_sentense_output();

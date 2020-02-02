@@ -27,6 +27,8 @@ typedef struct
 
 	Position	gps_position;
 
+	int32_t		temp;
+
 }State_struct;
 
 // ----------------------------------------------------------------------------

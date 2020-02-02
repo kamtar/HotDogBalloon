@@ -20,8 +20,9 @@
 #define CMD_ERASE_EXTFLASH_PAGE		3	// Smaze stranku 			[addr] 				addr = adresa zacatku 4 KB stranky
 #define CMD_WRITE_EXTFLASH			4	// Zapise data do flashky	[addr, data]		addr = adresa, data = hex
 
-// Balloon
+// Timing
 #define GPS_FIX_TIMEOUT				3*60	// [s]
-#define GPS_FIX_PERIOD				1*60	// [s]
+#define MEASURE_PERIOD				10		// [s]
+#define MEASURE_CNT					6
 
 #endif /* CONFIG_H_ */

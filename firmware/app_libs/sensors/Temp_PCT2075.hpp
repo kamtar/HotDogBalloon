@@ -15,6 +15,9 @@ public:
 	Temp_PCT2075(I_I2C& i2c);
 	bool Init();
 
+	void shutdown();
+	void normal();
+
 	int get_temp();
 private:
 	I_I2C& m_i2c;

@@ -181,6 +181,8 @@ int main(void)
   for(uint8_t i=0; i<(sizeof(output_pins)/sizeof(output_pins[0])); i++)
 	  output_pins[i]->Init();
 
+  gps_on.set();
+
   barometer.Init();
   temp_sensor.Init();
   lora_select.set();
@@ -206,8 +208,6 @@ int main(void)
   DataRef pck = {(uint8_t*)test_packet, 11};
   DataRef pck_raw = {nullptr, 0};
   char buff[256];
-
-  I2C_MUX(false);
 
   enable_sys_uart(SYS_UART_START_TIMEOUT);
   enable_gps_uart();

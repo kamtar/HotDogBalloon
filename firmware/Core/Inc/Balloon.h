@@ -15,7 +15,7 @@ public:
 	void ms_task();
 	void sec_task();
 
-	void state_debug(bool en) { m_debug = en; }
+	void state_debug(bool en) { m_cfg.debug = en; }
 
 	bool busy() { return m_state != IDLE; }
 
@@ -27,10 +27,13 @@ private:
 
 	enum states
 	{
-		INITIAL_GPS_FIX = 0,
+		IDLE = 0,
+		INITIAL_GPS_FIX,
 		NORMAL_GPS_FIX,
 		WAIT_FOR_GPS_FIX,
-		IDLE
+		TEMP_AND_PRESSURE,
+		LORA_SEND,
+		LORA_WAIT
 	};
 
 	uint8_t m_state;
@@ -38,7 +41,13 @@ private:
 
 	volatile uint32_t m_state_tmr;
 
-	bool m_debug;
+	struct
+	{
+		bool 	debug;
+		uint8_t measure_cnt;
+		bool 	last_gps_fix;
+
+	}m_cfg;
 };
 
 inline Balloon::Balloon() {}
