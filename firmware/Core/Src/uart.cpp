@@ -5,6 +5,7 @@
 #include "system_init.h"
 
 static bool sys_uart_enabled = false;
+static bool gps_uart_enabled = false;
 
 // ----------------------------------------------------------------------------
 bool enable_sys_uart(uint32_t timeout)
@@ -38,3 +39,44 @@ void disable_sys_uart(bool was_disabled)
 		sys_uart_enabled = false;
 	}
 }
+
+// ----------------------------------------------------------------------------
+bool enable_gps_uart()
+{
+	bool was_disabled = !gps_uart_enabled;
+
+	if(!gps_uart_enabled)
+	{
+		USART2_MUX(true);
+
+		gps_uart.enable();
+
+		gps_uart_enabled = true;
+	}
+
+	return was_disabled;
+}
+
+// ----------------------------------------------------------------------------
+void disable_gps_uart(bool was_disabled)
+{
+	if(gps_uart_enabled && was_disabled)
+	{
+		gps_uart.disable();
+
+		USART2_MUX(false);
+
+		gps_uart_enabled = false;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+

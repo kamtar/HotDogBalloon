@@ -1,4 +1,6 @@
 
+#include "main.hpp"
+
 #include "Commands.h"
 #include "Parsing.h"
 

@@ -36,13 +36,13 @@ UART_HandleTypeDef huart2;
 // Pins
 STM32OutputPin led_gpio(GPIOA, GPIO_PIN_15);
 STM32OutputPin gps_on(GPIOB, GPIO_PIN_0);
-STM32OutputPin gps_rst(GPIOA, GPIO_PIN_1);
+//STM32OutputPin gps_rst(GPIOA, GPIO_PIN_1);
 STM32OutputPin lora_select(GPIOA, GPIO_PIN_4);
 STM32OutputPin lora_reset(GPIOA, GPIO_PIN_8);
 //STM32OutputPin lora_dio0(GPIOA, GPIO_PIN_11);
 STM32OutputPin extflash_select(GPIOB, GPIO_PIN_10);
 
-STM32OutputPin* output_pins[] = {&lora_select, &lora_reset, &led_gpio, &gps_on, &gps_rst, &extflash_select};
+STM32OutputPin* output_pins[] = {&lora_select, &lora_reset, &led_gpio, &gps_on, &extflash_select};
 
 // Peripherals
 STM32_I2C i2c2(I2C2);
@@ -62,7 +62,7 @@ Sx1276_Lora lora_radio(semtech_dev);
 LoRaWANPacketGen lorawan_packet_gen(nwkSKey, appSKey, static_cast<uint32_t>(devAddr));
 Commands cmd({ sys_cmd_buffer, sizeof(sys_cmd_buffer) });
 Gps gps({ gps_cmd_buffer, sizeof(gps_cmd_buffer) });
-
+Balloon balloon;
 
 extern "C" void USART1_IRQHandler()
 {
@@ -112,6 +112,8 @@ void systick_handler()
 	handle_led(led.red, led_gpio);
 
 	handle_tmr_flags(ms_tmr.sys_uart_tmr, flags.sys_uart_timeout);
+
+	balloon.ms_task();
 }
 
 // ----------------------------------------------------------------------------
@@ -119,17 +121,11 @@ void sec_handler()
 {
 	st.uptime++;
 
-	handle_tmr_flags(sec_tmr.measurement, flags.measurement);
+	balloon.sec_task();
 
-	if(st.gps_fixed && st.gps_valid)
-	{
-		led.red = 500;
-	}
-	else
-	{
-		led.red = 2;
-	}
+	led.red = 2;
 
+	/*
 	debug("Uptime    : %lu\r\n", st.uptime);
 	debug("GPS fixed : %d\r\n", st.gps_fixed);
 	debug("GPS valid : %d\r\n", st.gps_valid);
@@ -137,6 +133,7 @@ void sec_handler()
 	debug("Longitude : %lu.%lu %c\r\n", st.gps_position.longitude[0], st.gps_position.longitude[1], (char)st.gps_position.e_w);
 	debug("Altitude  : %lu.%lu\r\n", st.gps_position.altitude[0], st.gps_position.altitude[1]);
 	debug("--------------------------------\r\n");
+	*/
 }
 
 // ----------------------------------------------------------------------------
@@ -147,11 +144,12 @@ bool can_stop()
 #else
 	bool led_active = led.red;
 	bool tmr_active = ms_tmr.sys_uart_tmr || ms_tmr.ms;
-	bool flags_active = flags.measurement || flags.sec || flags.sys_uart_timeout;
+	bool flags_active = flags.sec || flags.sys_uart_timeout;
+	bool app_active = balloon.busy();
 
 	// TODO dalsi podminky pro povoleni usnuti
 
-	return !(led_active || tmr_active || flags_active);
+	return !(led_active || tmr_active || flags_active || app_active);
 #endif
 }
 
@@ -183,15 +181,6 @@ int main(void)
   for(uint8_t i=0; i<(sizeof(output_pins)/sizeof(output_pins[0])); i++)
 	  output_pins[i]->Init();
 
-  gps_on.set();
-  delay_ms(50);
-  gps_on.clear();
-  delay_ms(50);
-
-  gps_rst.clear();
-  delay_ms(100);
-  gps_rst.set();
-
   barometer.Init();
   temp_sensor.Init();
   lora_select.set();
@@ -218,23 +207,13 @@ int main(void)
   DataRef pck_raw = {nullptr, 0};
   char buff[256];
 
-  /*
-  HAL_UART_Transmit(&huart2, (uint8_t*)"$PMTK104*37\r\n", 13, 1000);
-  HAL_UART_Receive(&huart2, (uint8_t*)buff, 1024, 50);
-  HAL_UART_Abort(&huart2);
-  HAL_UART_Transmit(&huart2, (uint8_t*)"$PMTK300,1000,0,0,0,0*1C\r\n", 26, 1000);
-  HAL_UART_Transmit(&huart2, (uint8_t*)"$PMTK314,1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,1,0*2D\r\n", 51, 1000);
-  */
-
-  uint8_t* t =(uint8_t*)"$PMTK000*32\r\n";
-  volatile uint32_t time_to_fix_sec;
-
   I2C_MUX(false);
-  //USART2_MUX(false);
 
   enable_sys_uart(SYS_UART_START_TIMEOUT);
+  enable_gps_uart();
 
   sys_uart.rx_start();
+  HAL_NVIC_EnableIRQ(USART1_IRQn);
   gps_uart.rx_start();
   HAL_NVIC_EnableIRQ(USART2_IRQn);
 
@@ -243,17 +222,8 @@ int main(void)
 
   cmd.implicit_lf(true);
 
-  gps.cold_start();
-
-  HAL_Delay(500);
-
-  gps.set_fix();
-
-  HAL_Delay(500);
-
-  gps.set_nmea_sentense_output();
-
-  HAL_Delay(500);
+  balloon.init();
+  balloon.state_debug(true);
 
   while (1)
   {
@@ -275,6 +245,8 @@ int main(void)
 
 	  gps.task();
 
+	  balloon.task();
+
 	  if(can_stop())
 	  {// Je mozne prejit do stopu a probudit se az na RTC
 
@@ -285,46 +257,6 @@ int main(void)
 
 		  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 	  }
-
-	  /*
-	  memset(buff,0,256);
-	  //HAL_UART_Transmit(&huart2, t, 13, 1000);
-	  HAL_UART_Abort(&huart2);
-	  HAL_UART_Receive(&huart2, (uint8_t*)buff, 255, 500);
-
-	  for(int i=0;i<256;i++)
-	  {
-
-		  if (strncmp(&buff[i],"$GPGGA,",7)==0)
-		  {
-				if(buff[i+18] != 0x2c && buff[i+18] != 0)
-				{
-						HAL_RTC_GetTime(&hrtc, &nTime, RTC_FORMAT_BIN);
-						HAL_RTC_GetDate(&hrtc, &yy, RTC_FORMAT_BIN);
-						if(nTime.Minutes != sTime.Minutes)
-							time_to_fix_sec = (((nTime.Minutes - sTime.Minutes)*60) - sTime.Seconds) + nTime.Seconds;
-						else
-							time_to_fix_sec = nTime.Seconds -  sTime.Seconds;
-						led_gpio.set();
-						HAL_Delay(10);
-						led_gpio.clear();
-						HAL_Delay(10);
-				}
-
-		  }
-
-		  if (strncmp(&buff[i],"$GPGSV,",7)==0)
-		  {
-			  if(buff[i+12] != 0x30 && buff[i+12] != 0)
-			  {
-				  led_gpio.set();
-				  HAL_Delay(10);
-				  led_gpio.clear();
-				  HAL_Delay(10);
-			  }
-		  }
-	  }
-	  */
 
 	//  temp = temp_sensor.get_temp();
 	 // lorawan_packet_gen.Gen_PacketDataUp(true, pck, pck_raw);

@@ -48,7 +48,6 @@ typedef struct
 typedef struct
 {
 	volatile uint32_t sec;
-	volatile uint32_t measurement;
 
 }Sec_tmr_struct;
 
@@ -56,7 +55,6 @@ typedef struct
 typedef struct
 {
 	volatile bool sec;
-	volatile bool measurement;
 	volatile bool sys_uart_timeout;
 
 }Flag_struct;

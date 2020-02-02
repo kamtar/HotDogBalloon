@@ -113,8 +113,6 @@ void STM32_FIFO_UART::rx_start()
 
     /* Enable the UART Parity Error interrupt and Data Register Not Empty interrupt */
     SET_BIT(m_huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE);
-
-    HAL_NVIC_EnableIRQ(USART1_IRQn);
 }
 
 // ----------------------------------------------------------------------------

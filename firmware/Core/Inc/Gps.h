@@ -2,7 +2,6 @@
 #ifndef GPS_H_
 #define GPS_H_
 
-#include "main.hpp"
 #include "config.h"
 
 class Gps
@@ -18,8 +17,10 @@ public:
 	void pmtk_test();
 
 	void cold_start();
+	void hot_start();
 	void set_fix();
 	void set_nmea_sentense_output();
+	void standby_mode();
 
 private:
 	void prepare_command();

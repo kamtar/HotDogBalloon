@@ -17,11 +17,11 @@
 
 #include "Commands.h"
 #include "Gps.h"
+#include "Balloon.h"
 
 // Pins
 extern STM32OutputPin led_gpio;
 extern STM32OutputPin gps_on;
-extern STM32OutputPin gps_rst;
 extern STM32OutputPin lora_select;
 extern STM32OutputPin lora_reset;
 extern STM32OutputPin extflash_select;
@@ -42,5 +42,8 @@ extern AT25SF041 		extflash;
 
 // Others
 extern LoRaWANPacketGen lorawan_packet_gen;
+extern Commands cmd;
+extern Gps gps;
+extern Balloon balloon;
 
 #endif /* MAIN_HPP_ */

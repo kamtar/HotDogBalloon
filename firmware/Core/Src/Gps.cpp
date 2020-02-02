@@ -1,4 +1,6 @@
 
+#include "main.hpp"
+
 #include "Gps.h"
 #include "Parsing.h"
 
@@ -9,10 +11,12 @@
 #include "uart.h"
 
 // CMD
-const uint8_t PMTK_TEST[] = "$PMTK000*32\r\n";
+const uint8_t PMTK_TEST[] 					= "$PMTK000*32\r\n";
 const uint8_t PMTK_CMD_FULL_COLD_START[] 	= "$PMTK104*37\r\n";
+const uint8_t PMTK_CMD_HOT_START[]			= "$PMTK101*32\r\n";
 const uint8_t PMTK_API_SET_FIX_CTL[] 		= "$PMTK300,1000,0,0,0,0*1C\r\n";
 const uint8_t PMTK_API_SET_NMEA_OUTPUT[] 	= "$PMTK314,1,1,1,1,1,5,0,0,0,0,0,0,0,0,0,0,0,1,0*2D\r\n";
+const uint8_t PMTK_CMD_STANDBY_MODE[]		= "$PMTK161,0*28\r\n";
 
 // MSG
 const uint8_t PMTK_SYS_MSG[] 	= "$PMTK010";
@@ -34,6 +38,12 @@ void Gps::cold_start()
 }
 
 // ----------------------------------------------------------------------------
+void Gps::hot_start()
+{
+	send_cmd((uint8_t *)PMTK_CMD_HOT_START, (size_t)sizeof(PMTK_CMD_HOT_START));
+}
+
+// ----------------------------------------------------------------------------
 void Gps::set_fix()
 {
 	send_cmd((uint8_t *)PMTK_API_SET_FIX_CTL, (size_t)sizeof(PMTK_API_SET_FIX_CTL));
@@ -43,6 +53,12 @@ void Gps::set_fix()
 void Gps::set_nmea_sentense_output()
 {
 	send_cmd((uint8_t *)PMTK_API_SET_NMEA_OUTPUT, (size_t)sizeof(PMTK_API_SET_NMEA_OUTPUT));
+}
+
+// ----------------------------------------------------------------------------
+void Gps::standby_mode()
+{
+	send_cmd((uint8_t *)PMTK_CMD_STANDBY_MODE, (size_t)sizeof(PMTK_CMD_STANDBY_MODE));
 }
 
 // ----------------------------------------------------------------------------

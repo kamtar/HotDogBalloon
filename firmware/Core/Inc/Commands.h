@@ -2,7 +2,6 @@
 #ifndef COMMANDS_H_
 #define COMMANDS_H_
 
-#include "main.hpp"
 #include "config.h"
 
 class Commands
