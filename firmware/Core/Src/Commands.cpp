@@ -1,5 +1,7 @@
 
 #include "Commands.h"
+#include "Parsing.h"
+
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
@@ -81,7 +83,7 @@ void Commands::parse_command()
 {
 	if(cmd_size() > 0)
 	{
-		uint8_t rq = parse_uint(m_cmd.params[0]);
+		uint8_t rq = Parsing::parse_uint(m_cmd.params[0]);
 
 		switch(rq)
 		{
@@ -94,7 +96,7 @@ void Commands::parse_command()
 		{
 			if(m_cmd.params_cnt >= 3)
 			{
-				read_extflash(parse_hex(m_cmd.params[1]), parse_uint(m_cmd.params[2]));
+				read_extflash(Parsing::parse_hex(m_cmd.params[1]), Parsing::parse_uint(m_cmd.params[2]));
 			}
 			else
 			{
@@ -111,7 +113,7 @@ void Commands::parse_command()
 		{
 			if(m_cmd.params_cnt >= 2)
 			{
-				erase_extflash_page(parse_hex(m_cmd.params[1]));
+				erase_extflash_page(Parsing::parse_hex(m_cmd.params[1]));
 			}
 			else
 			{
@@ -123,7 +125,7 @@ void Commands::parse_command()
 		{
 			if(m_cmd.params_cnt >= 3)
 			{
-				write_extflash(parse_hex(m_cmd.params[1]), m_cmd.params[2]);
+				write_extflash(Parsing::parse_hex(m_cmd.params[1]), m_cmd.params[2]);
 			}
 			else
 			{
@@ -151,63 +153,12 @@ void Commands::clear_command()
 	m_fifo.incnt = 0;
 	m_fifo.outcnt = 0;
 
-	memset(m_cmd.params, 0, sizeof(m_cmd.params));
+	for(size_t i=0; i<MAX_PARAMS; i++)
+		m_cmd.params[i] = m_fifo.buffer;
+
 	m_cmd.cr = false;
 	m_cmd.lf = m_cmd.implicit_lf;
 	m_cmd.params_cnt = 0;
-}
-
-// ----------------------------------------------------------------------------
-uint32_t Commands::parse_uint(uint8_t * src)
-{
-	return strtoul((const char *)src, NULL, 10);
-}
-
-// ----------------------------------------------------------------------------
-int32_t Commands::parse_int(uint8_t * src)
-{
-	return strtoul((const char *)src, NULL, 10);
-}
-
-// ----------------------------------------------------------------------------
-uint32_t Commands::parse_hex(uint8_t * src)
-{
-	return strtoul((const char *)src, NULL, 16);
-}
-
-// ----------------------------------------------------------------------------
-size_t Commands::convert_to_bytes(uint8_t * src)
-{
-	if(*src == '\0')
-		return 0;
-
-	uint8_t * target = src;
-
-	char hex_array[3];
-	hex_array[2] = '\0';
-
-	size_t target_size = 0;
-
-	while(1)
-	{
-		hex_array[0] = (char)(*src);
-		src++;
-
-		if(*src == '\0')
-			return 0;
-
-		hex_array[1] = (char)(*src);
-		src++;
-
-		*target = (uint8_t)strtoul(hex_array, NULL, 16);
-		target++;
-		target_size++;
-
-		if(*src == '\0')
-			break;
-	}
-
-	return target_size;
 }
 
 // ----------------------------------------------------------------------------
@@ -290,7 +241,7 @@ void Commands::erase_extflash_page(uint32_t addr)
 // ----------------------------------------------------------------------------
 void Commands::write_extflash(uint32_t addr, uint8_t * data)
 {
-	size_t size = convert_to_bytes(data);
+	size_t size = Parsing::convert_to_bytes(data);
 
 	if(!size)
 	{

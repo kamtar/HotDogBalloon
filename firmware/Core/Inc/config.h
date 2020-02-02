@@ -2,13 +2,15 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#define DEBUG_UART 1
+#define DEBUG_UART 	1
+
+#define NO_SLEEP	1
 
 #define SYS_UART_START_TIMEOUT 		30000	// [ms]
 #define SYS_UART_PRINTF_TIMEOUT		1000	// [ms]
 #define SYS_UART_CMD_TIMEOUT		10000	// [ms]
 
-#define MAX_PARAMS 20
+#define MAX_PARAMS 30
 
 // Commands								   info						parametry			popis parametru
 

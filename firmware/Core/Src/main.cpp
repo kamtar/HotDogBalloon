@@ -18,8 +18,12 @@ static constexpr uint64_t lora_frq = 868100000;
 
 // Buffers
 uint8_t sys_uart_rx_buffer[255];
-uint8_t sys_uart_tx_buffer[255];
-uint8_t cmd_buffer[255];
+uint8_t sys_uart_tx_buffer[320];
+uint8_t sys_cmd_buffer[255];
+
+uint8_t gps_uart_rx_buffer[255];
+uint8_t gps_uart_tx_buffer[255];
+uint8_t gps_cmd_buffer[255];
 
 // STM HAL instances
 ADC_HandleTypeDef hadc;
@@ -38,13 +42,14 @@ STM32OutputPin lora_reset(GPIOA, GPIO_PIN_8);
 //STM32OutputPin lora_dio0(GPIOA, GPIO_PIN_11);
 STM32OutputPin extflash_select(GPIOB, GPIO_PIN_10);
 
-STM32OutputPin* output_pins[] = {&lora_select, &lora_reset, &led_gpio, &gps_on, &extflash_select};
+STM32OutputPin* output_pins[] = {&lora_select, &lora_reset, &led_gpio, &gps_on, &gps_rst, &extflash_select};
 
 // Peripherals
 STM32_I2C i2c2(I2C2);
 STM32Spi lora_spi(SPI1, lora_select);
 STM32Spi extflash_spi(SPI1, extflash_select);
 STM32_FIFO_UART sys_uart(&huart1, { sys_uart_rx_buffer, sizeof(sys_uart_rx_buffer) }, { sys_uart_tx_buffer, sizeof(sys_uart_tx_buffer) });
+STM32_FIFO_UART gps_uart(&huart2, { gps_uart_rx_buffer, sizeof(gps_uart_rx_buffer) }, { gps_uart_tx_buffer, sizeof(gps_uart_tx_buffer) });
 
 // Devices
 Bar_MS5637 barometer(i2c2);
@@ -55,12 +60,18 @@ Sx1276_Lora lora_radio(semtech_dev);
 
 // Others
 LoRaWANPacketGen lorawan_packet_gen(nwkSKey, appSKey, static_cast<uint32_t>(devAddr));
-Commands cmd({ cmd_buffer, sizeof(cmd_buffer) });
+Commands cmd({ sys_cmd_buffer, sizeof(sys_cmd_buffer) });
+Gps gps({ gps_cmd_buffer, sizeof(gps_cmd_buffer) });
 
 
 extern "C" void USART1_IRQHandler()
 {
 	sys_uart.irq();
+}
+
+extern "C" void USART2_IRQHandler()
+{
+	gps_uart.irq();
 }
 
 State_struct	st;
@@ -110,12 +121,30 @@ void sec_handler()
 
 	handle_tmr_flags(sec_tmr.measurement, flags.measurement);
 
-	led.red = 2;
+	if(st.gps_fixed && st.gps_valid)
+	{
+		led.red = 500;
+	}
+	else
+	{
+		led.red = 2;
+	}
+
+	debug("Uptime    : %lu\r\n", st.uptime);
+	debug("GPS fixed : %d\r\n", st.gps_fixed);
+	debug("GPS valid : %d\r\n", st.gps_valid);
+	debug("Latitude  : %lu.%lu %c\r\n", st.gps_position.latitude[0], st.gps_position.latitude[1], (char)st.gps_position.n_s);
+	debug("Longitude : %lu.%lu %c\r\n", st.gps_position.longitude[0], st.gps_position.longitude[1], (char)st.gps_position.e_w);
+	debug("Altitude  : %lu.%lu\r\n", st.gps_position.altitude[0], st.gps_position.altitude[1]);
+	debug("--------------------------------\r\n");
 }
 
 // ----------------------------------------------------------------------------
 bool can_stop()
 {
+#if NO_SLEEP
+	return false;
+#else
 	bool led_active = led.red;
 	bool tmr_active = ms_tmr.sys_uart_tmr || ms_tmr.ms;
 	bool flags_active = flags.measurement || flags.sec || flags.sys_uart_timeout;
@@ -123,6 +152,7 @@ bool can_stop()
 	// TODO dalsi podminky pro povoleni usnuti
 
 	return !(led_active || tmr_active || flags_active);
+#endif
 }
 
 
@@ -155,8 +185,12 @@ int main(void)
 
   gps_on.set();
   delay_ms(50);
-  //gps_on.clear();
-  //delay_ms(50);
+  gps_on.clear();
+  delay_ms(50);
+
+  gps_rst.clear();
+  delay_ms(100);
+  gps_rst.set();
 
   barometer.Init();
   temp_sensor.Init();
@@ -196,12 +230,30 @@ int main(void)
   volatile uint32_t time_to_fix_sec;
 
   I2C_MUX(false);
-  USART2_MUX(false);
+  //USART2_MUX(false);
 
   enable_sys_uart(SYS_UART_START_TIMEOUT);
+
   sys_uart.rx_start();
+  gps_uart.rx_start();
+  HAL_NVIC_EnableIRQ(USART2_IRQn);
+
+  gps.raw_debug(false);
+  gps.app_debug(false);
 
   cmd.implicit_lf(true);
+
+  gps.cold_start();
+
+  HAL_Delay(500);
+
+  gps.set_fix();
+
+  HAL_Delay(500);
+
+  gps.set_nmea_sentense_output();
+
+  HAL_Delay(500);
 
   while (1)
   {
@@ -220,6 +272,8 @@ int main(void)
 	  }
 
 	  cmd.task();
+
+	  gps.task();
 
 	  if(can_stop())
 	  {// Je mozne prejit do stopu a probudit se az na RTC

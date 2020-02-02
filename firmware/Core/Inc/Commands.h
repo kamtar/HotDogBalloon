@@ -19,11 +19,6 @@ private:
 	void parse_command();
 	void clear_command();
 
-	uint32_t parse_uint(uint8_t * src);
-	int32_t parse_int(uint8_t * src);
-	uint32_t parse_hex(uint8_t * src);
-	size_t convert_to_bytes(uint8_t * src);
-
 	void read_state();
 	void read_extflash(uint32_t addr, size_t size);
 	void erase_extflash_all();
@@ -58,6 +53,6 @@ private:
 
 inline Commands::Commands(DataRef buf) :
 	m_fifo { buf.data, buf.size, 0, 0 }
-	{}
+	{clear_command();}
 
 #endif /* COMMANDS_H_ */

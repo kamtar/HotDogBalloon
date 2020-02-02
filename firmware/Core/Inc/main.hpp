@@ -16,6 +16,7 @@
 #include <LoRaWANPacketGen.hpp>
 
 #include "Commands.h"
+#include "Gps.h"
 
 // Pins
 extern STM32OutputPin led_gpio;
@@ -30,6 +31,7 @@ extern STM32_I2C 		i2c2;
 extern STM32Spi 		lora_spi;
 extern STM32Spi 		extflash_spi;
 extern STM32_FIFO_UART 	sys_uart;
+extern STM32_FIFO_UART 	gps_uart;
 
 // Devices
 extern Bar_MS5637 		barometer;

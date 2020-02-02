@@ -7,10 +7,25 @@
 
 #define delay_ms HAL_Delay
 
+typedef struct
+{
+	uint32_t	latitude[2];
+	uint8_t 	n_s;
+	uint32_t	longitude[2];
+	uint8_t		e_w;
+	uint32_t	altitude[2];
+
+}__attribute__ ((__packed__)) Position;
+
 // ----------------------------------------------------------------------------
 typedef struct
 {
-	uint32_t uptime;
+	uint32_t 	uptime;
+
+	bool 		gps_fixed;
+	bool		gps_valid;
+
+	Position	gps_position;
 
 }State_struct;
 
